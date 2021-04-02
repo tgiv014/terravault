@@ -11,6 +11,17 @@ variable "project_id" {
   type = string
 }
 
+data "template_cloudinit_config" "user_data" {
+  gzip          = false
+  base64_encode = false
+
+  part {
+    filename     = "conf_certbot_and_vault.yaml"
+    content_type = "text/cloud-config"
+    content = file("./scripts/conf_certbot_and_vault.yaml")
+  }
+}
+
 provider "google" {
 
   credentials = file("credentials.json")
@@ -51,7 +62,7 @@ resource "google_compute_instance" "vm_instance" {
 
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-10"
+      image = "ubuntu-os-cloud/ubuntu-1804-bionic-v20210325"
     }
   }
 
@@ -60,6 +71,11 @@ resource "google_compute_instance" "vm_instance" {
     access_config {
         nat_ip = google_compute_address.vm_static_ip.address
     }
+  }
+
+  metadata = {
+    user-data = data.template_cloudinit_config.user_data.rendered
+    # user-data-encoding = "base64"
   }
 }
 
