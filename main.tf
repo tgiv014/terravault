@@ -26,7 +26,7 @@ resource "google_compute_network" "vpc_network" {
 
 resource "google_compute_firewall" "http-ssh" {
   name    = "allow-ssh"
-  network = "terraform-network"
+  network = google_compute_network.vpc_network.name
 
   allow {
     protocol = "tcp"
@@ -36,7 +36,7 @@ resource "google_compute_firewall" "http-ssh" {
 
 resource "google_compute_firewall" "http-vault" {
   name    = "allow-vault"
-  network = "terraform-network"
+  network = google_compute_network.vpc_network.name
 
   allow {
     protocol = "tcp"
@@ -51,7 +51,7 @@ resource "google_compute_instance" "vm_instance" {
 
   boot_disk {
     initialize_params {
-      image = "cos-cloud/cos-stable"
+      image = "debian-cloud/debian-10"
     }
   }
 
