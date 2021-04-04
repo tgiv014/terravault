@@ -1,7 +1,7 @@
 #cloud-config
 groups:
-  - ubuntu: [root,sys]
-  - hashicorp
+  - terraform
+  - ssl-cert
 
 # Add users to the system. Users are added after groups are added.
 users:
@@ -9,19 +9,35 @@ users:
   - name: terraform
     gecos: terraform
     shell: /bin/bash
-    primary_group: hashicorp
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: users, admin
-    lock_passwd: false
-    
-# # Downloads the golang package
-# packages:
-#   - golang-go
+    primary_group: terraform
+    groups: users, admin, ssl-cert
 
-# # Sets the GOPATH & downloads the demo payload
-# runcmd:
-#   - sudo su terraform
-#   - sudo mkdir /home/terraform/go
-#   - sudo chown terraform:hashicorp /home/terraform/go
-#   - export GOPATH=/home/terraform/go
-#   - go get github.com/hashicorp/learn-go-webapp-demo
+apt:
+  preserve_sources_list: true
+  sources:
+    vault-repo.list:
+      source: deb https://apt.releases.hashicorp.com $RELEASE main
+      keyid: E8A0 32E0 94D8 EB4E A189  D270 DA41 8C88 A321 9F7B
+
+packages:
+  - vault
+  - certbot
+  - jq
+
+runcmd:
+  - export DOMAIN="${domain}"
+  - export EMAIL="${email}"
+  - certbot certonly --standalone -n -d $DOMAIN --email $EMAIL --agree-tos
+  - chgrp -R ssl-cert /etc/letsencrypt
+  - chmod -R g=rX /etc/letsencrypt
+  - mkdir /home/terraform/vaultdata
+  - chown -R terraform:terraform /home/terraform
+
+write_files:
+  - owner: root:root
+    path: /etc/cron.d/letsencrypt_renew
+    content: "15 3 * * * /usr/bin/certbot renew --quiet"
+  - owner: terraform:terraform
+    path: /home/terraform/vault.hcl
+    encoding: b64
+    content: ${vault_config}
