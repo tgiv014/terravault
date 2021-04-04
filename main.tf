@@ -42,6 +42,7 @@ data "template_file" "script" {
     domain = var.certbot_domain
     email = var.certbot_email
     vault_config = base64encode(data.template_file.vault_config.rendered)
+    vault_service_file = base64encode(file("./data/vault.service"))
   }
 }
 
@@ -119,6 +120,10 @@ resource "google_compute_firewall" "http-vault" {
 resource "google_kms_key_ring" "vault_key_ring" {
   name     = "vault_key_ring"
   location = "us-central1"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_kms_crypto_key" "vault-key" {

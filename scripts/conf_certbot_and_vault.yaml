@@ -32,6 +32,9 @@ runcmd:
   - chmod -R g=rX /etc/letsencrypt
   - mkdir /home/terraform/vaultdata
   - chown -R terraform:terraform /home/terraform
+  - echo ${vault_service_file} | base64 --decode > /etc/systemd/system/vault.service
+  - sudo systemctl enable vault
+  - sudo systemctl start vault
 
 write_files:
   - owner: root:root
