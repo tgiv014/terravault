@@ -11,7 +11,6 @@ StartLimitBurst=3
 User=terraform
 Group=terraform
 ProtectSystem=full
-ProtectHome=read-only
 PrivateTmp=yes
 PrivateDevices=yes
 SecureBits=keep-caps
